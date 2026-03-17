@@ -42,8 +42,8 @@ function getCreatureDescription(card) {
 
 
 class Duck extends Creature {
-    constructor() {
-        super("Мирная утка", 2);
+    constructor(name = 'Утка', power = 2, ...args) {
+        super(name, power, args);
     }
 
     quacks() {
@@ -60,7 +60,7 @@ class Gatling extends Creature {
         super("Гатлинг", 6);
     }
 }
-Getling.prototype.attack = function (gameContext, continuation) {
+Gatling.prototype.attack = function (gameContext, continuation) {
         const taskQueue = new TaskQueue();
 
         const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
@@ -82,19 +82,40 @@ Getling.prototype.attack = function (gameContext, continuation) {
 
 
 class Dog extends Creature {
-    constructor() {
-        super("Пес-бандит", 3);
+    constructor(name = 'Пес-бандит', power = 3, ...args) {
+        super(name, power, args);
     }
 }
+
+class Trasher extends Duck {
+    constructor (name, max){
+        super("Громила", 5);
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        this.view.signalAbility(() => {
+            continuation(value - 1)
+        });
+    }
+
+    getDescriptions() {
+        return ['получает на 1 меньше урона', super.getDescriptions()];
+    }
+
+}
+
+
+
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
     new Duck(),
     new Duck(),
     new Duck(),
+    new Duck(),
 ];
 const banditStartDeck = [
-    new Dog(),
+    new Trasher(),
 ];
 
 
