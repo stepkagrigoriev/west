@@ -41,7 +41,7 @@ function getCreatureDescription(card) {
 
 
 
-class Duck extends Card {
+class Duck extends Creature {
     constructor() {
         super("Мирная утка", 2);
     }
@@ -55,8 +55,33 @@ class Duck extends Card {
     }
 }
 
+class Gatling extends Creature {
+    constructor() {
+        super("Гатлинг", 6);
+    }
+}
+Getling.prototype.attack = function (gameContext, continuation) {
+        const taskQueue = new TaskQueue();
 
-class Dog extends Card {
+        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+
+        taskQueue.push(onDone => this.view.showAttack(onDone));
+        
+        taskQueue.push(onDone => {
+            const oppositeCard = oppositePlayer.table[position];
+
+            if (oppositeCard) {
+                this.dealDamageToCreature(this.currentPower, oppositeCard, gameContext, onDone);
+            } else {
+                this.dealDamageToPlayer(1, gameContext, onDone);
+            }
+        });
+
+        taskQueue.continueWith(continuation);
+    };
+
+
+class Dog extends Creature {
     constructor() {
         super("Пес-бандит", 3);
     }
