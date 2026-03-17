@@ -112,6 +112,52 @@ class Trasher extends Duck {
 
 }
 
+class Lad extends Dog {
+    constructor(name = 'Браток', power = 2, ...args) {
+        super(name, power, args);
+    }
+    
+    static getInGameCount() {
+        return this.inGameCount || 0;
+    }
+
+    static setInGameCount(value) {
+        this.inGameCount = value;
+    }
+
+    doAfterComingIntoPlay(gameContext, continuation) {
+        Lad.setInGameCount(Lad.getInGameCount() + 1);
+        continuation();
+    }
+
+    doBeforeRemove(gameContext, continuation) {
+        Lad.setInGameCount(Lad.getInGameCount() - 1);
+        continuation();
+    }
+
+    getBonus() {
+        return Lad.getInGameCount() * (Lad.getInGameCount() + 1) / 2;
+    }
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) { 
+        continuation(value + this.getBonus());
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        if (value - this.getBonus() < 0) {
+            this.view.signalAbility(() => {
+                continuation(0);
+            });
+            return;
+        }
+        continuation(value - this.getBonus());
+    }
+
+    getDescriptions() {
+        return ['чем их больше, тем они сильнее', super.getDescriptions()];
+    }
+}
+
 
 class Brewer extends Duck {
     constructor(name = "Пивовар", maxPower = 2, image) {
@@ -169,9 +215,13 @@ class PseudoDuck extends Dog {
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
     new Duck(),
+    new Duck(),
+    new Duck(),
     new Brewer(),
 ];
 const banditStartDeck = [
+    new Lad(),
+    new Lad(),
     new Dog(),
     new Dog(),
     new Dog(),
