@@ -196,6 +196,10 @@ class Brewer extends Duck {
         });
         taskQueue.continueWith(continuation);
     }
+
+    getDescriptions() {
+        return ['любит пиво и всех хилит', super.getDescriptions()];
+    }
 }
 
 class PseudoDuck extends Dog {
@@ -208,6 +212,9 @@ class PseudoDuck extends Dog {
     swims = function () {
         console.log('float: both;')
     };
+    getDescriptions() {
+        return ['не утка', super.getDescriptions()];
+    }
 }
 
 
