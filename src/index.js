@@ -161,45 +161,60 @@ class Lad extends Dog {
 class Rogue extends Creature {
     constructor(name = 'Изгой', power = 2, ...args) {
         super(name, power, ...args);
-        this.stealedPowers = new TaskQueue();
+
     }
 
+    static getInGameCount() {
+        return this.inGameCount || 0;
+    }
+
+    static setInGameCount(value) {
+        this.inGameCount = value;
+    }
+
+    doAfterComingIntoPlay(gameContext, continuation) {
+        Rogue.setInGameCount(Rogue.getInGameCount() + 1);
+        continuation();
+    }
+
+    doBeforeRemove(gameContext, continuation) {
+        Rogue.setInGameCount(Rogue.getInGameCount() - 1);
+        continuation();
+    }
+
+    getBonus() {
+        return Rogue.getInGameCount() * (Rogue.getInGameCount() + 1) / 2;
+    }
+
+    stealAbilities(target, gameContext) {
+        if (target instanceof Rogue) return;
+
+        const proto = Object.getPrototypeOf(target);
+
+        const abilityNames = [
+            'modifyDealedDamageToCreature',
+            'modifyDealedDamageToPlayer',
+            'modifyTakenDamage'
+        ];
+
+        abilityNames.forEach(name => {
+            if (proto.hasOwnProperty(name)) {
+                this[name] = proto[name].bind(this);
+                delete proto[name];
+            }
+        });
+
+        gameContext.updateView();
+    }
     attack(gameContext, continuation) {
-        const taskQueue = new TaskQueue();
+        const { oppositePlayer } = gameContext;
+        const target = oppositePlayer.table.find(c => c);
 
-        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
-
-        taskQueue.push(onDone => this.view.showAttack(onDone));
-        const oppCard = oppositePlayer.table[position];
-        const oppCardProto = Object.getPrototypeOf(oppCard);
-        if (oppCard instanceof Rogue) {
-            taskQueue.push(onDone => this.dealDamageToCreature(2, oppCard, gameContext, onDone));
-        } else if (oppCard) {
-            if (oppCardProto.hasOwnProperty('modifyDealedDamageToCreature')) {
-                taskQueue.push(onDone => oppCardProto.modifyDealedDamageToCreature(2, this, gameContext, onDone));
-                this.stealedPowers.push((onDone => oppCardProto.modifyDealedDamageToCreature(2, this, gameContext, onDone)));
-                delete oppCardProto.modifyDealedDamageToCreature;
-
-            } else if (oppCardProto.hasOwnProperty('modifyTakenDamage')) {
-                taskQueue.push(onDone => this.modifyTakenDamage(2, oppCardProto, gameContext, onDone));
-                this.stealedPowers.push((onDone => this.modifyTakenDamage(2, oppCardProto, gameContext, onDone)));  
-                delete oppCardProto.modifyTakenDamage; 
-            } else if (oppCardProto.hasOwnProperty('modifyDealedDamageToPlayer')) {
-                taskQueue.push(onDone => oppCardProto.modifyDealedDamageToPlayer(2, gameContext, onDone));
-                this.stealedPowers.push((onDone => oppCardProto.modifyDealedDamageToPlayer(2, gameContext, onDone)));
-                delete oppCardProto.modifyDealedDamageToPlayer;
-            }
-            oppCard.updateView();
-
-            for (let i = 0; i < this.stealedPowers.tasks.length; i++) {
-                taskQueue.push(this.stealedPowers.tasks[i]);
-            }
-            
-            taskQueue.push(onDone => this.dealDamageToCreature(2, oppCard, gameContext, onDone));
-        } else {
-            taskQueue.push(onDone => this.dealDamageToPlayer(2, gameContext, onDone));
+        if (target) {
+            this.stealAbilities(target, gameContext);
         }
-        taskQueue.continueWith(continuation);
+
+        super.attack(gameContext, continuation);
     }
 }
 
@@ -271,16 +286,11 @@ const seriffStartDeck = [
     new Rogue(),
     new Duck(),
     new Duck(),
-    new Duck(),
-    new Brewer()
 ];
 const banditStartDeck = [
     new Lad(),
     new Lad(),
-    new Dog(),
-    new Trasher(),
-    new Gatling(),
-    new PseudoDuck()
+    
 ];
 
 // Создание игры.
