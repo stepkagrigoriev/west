@@ -268,16 +268,19 @@ class PseudoDuck extends Dog {
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
+    new Rogue(),
     new Duck(),
     new Duck(),
     new Duck(),
+    new Brewer()
 ];
 const banditStartDeck = [
     new Lad(),
     new Lad(),
-    new Lad(),
-    new Lad(),
-    new Dog()
+    new Dog(),
+    new Trasher(),
+    new Gatling(),
+    new PseudoDuck()
 ];
 
 // Создание игры.
