@@ -88,8 +88,8 @@ class Dog extends Creature {
 }
 
 class Trasher extends Duck {
-    constructor (name, max){
-        super("Громила", 5);
+    constructor (name = 'Громила', power = 5, ...args){
+        super(name, power, args);
     }
 
     modifyTakenDamage(value, fromCard, gameContext, continuation) {
