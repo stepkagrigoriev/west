@@ -7,6 +7,15 @@ import SpeedRate from './SpeedRate.js';
 class Creature extends Card {
     constructor(name, maxPower, image) {
         super(name, maxPower, image);
+        this._currentPower = maxPower;
+    }
+
+    get currentPower(){
+        return this._currentPower;
+    }
+
+    set currentPower(newPower){
+        this._currentPower = Math.min(newPower, this.maxPower);
     }
 
     getDescriptions() {
@@ -104,20 +113,69 @@ class Trasher extends Duck {
 }
 
 
+class Brewer extends Duck {
+    constructor(name = "Пивовар", maxPower = 2, image) {
+        super(name, maxPower, image);
+    }
+
+    attack(gameContext, continuation) {
+        const taskQueue = new TaskQueue();
+        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+        const allCards = currentPlayer.table.concat(oppositePlayer.table);
+
+        taskQueue.push(onDone => this.view.showAttack(onDone));
+        taskQueue.push(onDone => {
+            allCards.forEach(card => {
+                if (card instanceof Duck) {
+                    card.maxPower += 1;
+                    card.currentPower = Math.min(card.currentPower + 2, card.maxPower);
+                    card.view.signalHeal();
+                    card.updateView();
+                }
+            });
+
+            this.maxPower += 1;
+            this.currentPower = Math.min(this.currentPower + 2, this.maxPower);
+            this.view.signalHeal();
+            this.updateView();
+            onDone();
+        });
+        taskQueue.push(onDone => {
+            const oppositeCard = oppositePlayer.table[position];
+            if (oppositeCard) {
+                this.dealDamageToCreature(this.currentPower, oppositeCard, gameContext, onDone);
+            } else {
+                this.dealDamageToPlayer(1, gameContext, onDone);
+            }
+        });
+        taskQueue.continueWith(continuation);
+    }
+}
+
+class PseudoDuck extends Dog {
+    constructor(name = "Псевдоутка", maxPower = 3, ...args) {
+        super(name, maxPower, ...args);
+    }
+    quacks = function () {
+        console.log('quack')
+    };
+    swims = function () {
+        console.log('float: both;')
+    };
+}
+
 
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
     new Duck(),
-    new Duck(),
-    new Gatling()
+    new Brewer(),
 ];
 const banditStartDeck = [
-    new Duck(),
-    new Duck(),
-    new Duck(),
     new Dog(),
-    new Dog()
+    new Dog(),
+    new Dog(),
+    new Dog(),
 ];
 
 
