@@ -16,7 +16,7 @@ class Creature extends Card {
 
 // Отвечает является ли карта уткой.
 function isDuck(card) {
-    return card && card.quacks && card.swims;
+    return card instanceof Duck;
 }
 
 // Отвечает является ли карта собакой.
@@ -55,13 +55,6 @@ class Duck extends Card {
     }
 }
 
-function isDuck(obj){
-    return obj instanceof Duck;
-}
-
-function isDog(obj){
-    return obj instanceof Dog;
-}
 
 class Dog extends Card {
     constructor() {
